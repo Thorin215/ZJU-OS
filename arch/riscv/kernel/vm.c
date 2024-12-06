@@ -80,6 +80,7 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, uint
      * 可以使用 V bit 来判断页表项是否存在
     **/
     // printk("Come into the create_mapping\n");
+    LogBLUE("root: 0x%llx, [0x%llx, 0x%llx) -> [0x%llx, 0x%llx), perm: 0x%llx", pgtbl, pa, pa + sz, va, va + sz, perm);
     uint64_t vlimit = va + sz;
     uint64_t *pgd, *pmd, *pte;
     pgd = pgtbl;
@@ -110,5 +111,5 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, uint
         va += PGSIZE;
         pa += PGSIZE;
     }
-    LogBLUE("root: 0x%llx, [0x%llx, 0x%llx) -> [0x%llx, 0x%llx), perm: 0x%llx", pgtbl, pa, pa + sz, va, va + sz, perm);
+    
 }

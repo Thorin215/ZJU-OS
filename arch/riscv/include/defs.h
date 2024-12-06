@@ -7,6 +7,13 @@
 #define PHY_SIZE 128 * 1024 * 1024 // 128 MiB，QEMU 默认内存大小
 #define PHY_END (PHY_START + PHY_SIZE)
 
+#define VA2PA(x) ((x - (uint64_t)PA2VA_OFFSET))
+#define PA2VA(x) ((x + (uint64_t)PA2VA_OFFSET))
+#define PFN2PHYS(x) (((uint64_t)(x) << 12) + PHY_START)
+#define PHYS2PFN(x) ((((uint64_t)(x) - PHY_START) >> 12))
+
+
+
 #define PGSIZE 0x1000 // 4 KiB
 #define PGROUNDUP(addr) ((addr + PGSIZE - 1) & (~(PGSIZE - 1)))
 #define PGROUNDDOWN(addr) (addr & (~(PGSIZE - 1)))

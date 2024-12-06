@@ -55,6 +55,9 @@ _traps_smode:   # 切换内核态的栈
     add a3, sp, x0
     call trap_handler
 
+.globl __ret_from_fork
+__ret_from_fork:
+
     ld x0, 0(sp)
     ld x1, 8(sp)
 

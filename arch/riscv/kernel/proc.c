@@ -8,10 +8,7 @@
 extern void __dummy();
 extern void __switch_to(struct task_struct *prev, struct task_struct *next);
 
-#define VA2PA(x) ((x - (uint64_t)PA2VA_OFFSET))
-#define PA2VA(x) ((x + (uint64_t)PA2VA_OFFSET))
-#define PFN2PHYS(x) (((uint64_t)(x) << 12) + PHY_START)
-#define PHYS2PFN(x) ((((uint64_t)(x) - PHY_START) >> 12))
+
 
 extern uint64_t swapper_pg_dir[];
 extern char _sramdisk[], _eramdisk[];
@@ -19,6 +16,8 @@ extern char _sramdisk[], _eramdisk[];
 struct task_struct *idle;           // idle process
 struct task_struct *current;        // 指向当前运行线程的 task_struct
 struct task_struct *task[NR_TASKS]; // 线程数组，所有的线程都保存在此
+
+uint64_t nr_tasks = 2;
 
 // void task_init() {
 //     srand(2024);
@@ -180,7 +179,7 @@ void schedule() {
     // YOUR CODE HERE
     int maxCounter = -1;
     int index = -1;
-    for (int i = 1; i < NR_TASKS; ++i) {
+    for (int i = 1; i < nr_tasks; ++i) {
         printk("schedule: %d -> %d\n", task[i]->pid, task[i] -> counter);
         if (task[i]->state == TASK_RUNNING && (int)task[i]->counter > maxCounter) {
             printk("mamba\n");
@@ -190,7 +189,7 @@ void schedule() {
     }
 
     if (maxCounter == 0) {
-        for (int i = 1; i < NR_TASKS; ++i) {
+        for (int i = 1; i < nr_tasks; ++i) {
             if (task[i]->state == TASK_RUNNING) {
                 task[i]->counter = task[i]->priority;
             }
@@ -202,35 +201,35 @@ void schedule() {
     }
 }
 
-void load_program(struct task_struct *task) {
-    Elf64_Ehdr *ehdr = (Elf64_Ehdr *)_sramdisk;
+// void load_program(struct task_struct *task) {
+//     Elf64_Ehdr *ehdr = (Elf64_Ehdr *)_sramdisk;
 
-    LogGREEN("ehdr->e_ident = 0x%llx", *((uint64_t*)ehdr->e_ident));
-    Elf64_Phdr *phdrs = (Elf64_Phdr *)(_sramdisk + ehdr->e_phoff);
-    for (int i = 0; i < ehdr->e_phnum; ++i) {
-        Elf64_Phdr *phdr = phdrs + i;
-        if (phdr->p_type == PT_LOAD) {
-            // alloc space and copy content
-            uint64_t _ssegment = (uint64_t)_sramdisk + phdr->p_offset;
-            uint64_t* segment = (uint64_t*)alloc_pages((phdr->p_memsz + (phdr->p_vaddr & 0xfff) + PGSIZE - 1) / PGSIZE);
+//     LogGREEN("ehdr->e_ident = 0x%llx", *((uint64_t*)ehdr->e_ident));
+//     Elf64_Phdr *phdrs = (Elf64_Phdr *)(_sramdisk + ehdr->e_phoff);
+//     for (int i = 0; i < ehdr->e_phnum; ++i) {
+//         Elf64_Phdr *phdr = phdrs + i;
+//         if (phdr->p_type == PT_LOAD) {
+//             // alloc space and copy content
+//             uint64_t _ssegment = (uint64_t)_sramdisk + phdr->p_offset;
+//             uint64_t* segment = (uint64_t*)alloc_pages((phdr->p_memsz + (phdr->p_vaddr & 0xfff) + PGSIZE - 1) / PGSIZE);
             
-            char *csegment = (char*)segment + (phdr->p_vaddr & 0xfff);
-            char *_csegment = (char*)_ssegment;
-            for(uint64_t i = 0; i < (uint64_t)phdr->p_filesz; i++){
-                csegment[i] = _csegment[i];
-            }
-            memset((char*)segment + phdr->p_filesz + (phdr->p_vaddr & 0xfff), 0, phdr->p_memsz - phdr->p_filesz);
+//             char *csegment = (char*)segment + (phdr->p_vaddr & 0xfff);
+//             char *_csegment = (char*)_ssegment;
+//             for(uint64_t i = 0; i < (uint64_t)phdr->p_filesz; i++){
+//                 csegment[i] = _csegment[i];
+//             }
+//             memset((char*)segment + phdr->p_filesz + (phdr->p_vaddr & 0xfff), 0, phdr->p_memsz - phdr->p_filesz);
 
-            // do mapping
-            uint64_t perm = PTE_U | PTE_V | (phdr->p_flags & PF_X) << 3 | (phdr->p_flags & PF_W) << 1 | (phdr->p_flags & PF_R) >> 1;
-            create_mapping(task->pgd, phdr->p_vaddr, VA2PA((uint64_t)segment), phdr->p_memsz + (phdr->p_vaddr & 0xfff), perm);
-            LogBLUE("va: 0x%llx, pa: 0x%llx, size: 0x%llx, perm: 0x%llx", phdr->p_vaddr, VA2PA((uint64_t)segment), phdr->p_memsz + (phdr->p_vaddr & 0xfff), perm);
-        }
-    }
-    uint64_t usp = (uint64_t)alloc_page();
-    create_mapping(task->pgd, USER_END - PGSIZE, VA2PA(usp), PGSIZE, PTE_R | PTE_W | PTE_U | PTE_V);
-    task->thread.sepc = ehdr->e_entry;
-}
+//             // do mapping
+//             uint64_t perm = PTE_U | PTE_V | (phdr->p_flags & PF_X) << 3 | (phdr->p_flags & PF_W) << 1 | (phdr->p_flags & PF_R) >> 1;
+//             create_mapping(task->pgd, phdr->p_vaddr, VA2PA((uint64_t)segment), phdr->p_memsz + (phdr->p_vaddr & 0xfff), perm);
+//             LogBLUE("va: 0x%llx, pa: 0x%llx, size: 0x%llx, perm: 0x%llx", phdr->p_vaddr, VA2PA((uint64_t)segment), phdr->p_memsz + (phdr->p_vaddr & 0xfff), perm);
+//         }
+//     }
+//     uint64_t usp = (uint64_t)alloc_page();
+//     create_mapping(task->pgd, USER_END - PGSIZE, VA2PA(usp), PGSIZE, PTE_R | PTE_W | PTE_U | PTE_V);
+//     task->thread.sepc = ehdr->e_entry;
+// }
 
 //7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
 
@@ -256,7 +255,7 @@ void task_init() {
     /* YOUR CODE HERE */
 
     // 1. 参考 idle 的设置，为 task[1] ~ task[NR_TASKS - 1] 进行初始化
-    for (int i = 1; i < NR_TASKS; i++){
+    for (int i = 1; i < nr_tasks; i++){
         struct task_struct *ptask = (struct task_struct*)kalloc();
         // 2. 其中每个线程的 state 为 TASK_RUNNING, 此外，counter 和 priority 进行如下赋值：
         //     - counter  = 0;
@@ -292,7 +291,7 @@ void task_init() {
             cpgtbl[i] = cearly_pgtbl[i];
             if (cpgtbl[i] != cearly_pgtbl[i]) LogRED("cpgtbl[%d] = cearly_pgtbl[%d] = %c", i, i, cpgtbl[i]);
         }
-        LogGREEN("_sramdisk = %p, _eramdisk = %p", _sramdisk, _eramdisk);
+        // LogGREEN("_sramdisk = %p, _eramdisk = %p", _sramdisk, _eramdisk);
 
         load_program(ptask);
         LogGREEN("[S-MODE] SET PID = %d, PGD = 0x%llx, PRIORITY = %d", ptask->pid, ptask->pgd, ptask->priority);
@@ -302,4 +301,80 @@ void task_init() {
     /* YOUR CODE HERE */
 
     printk("...task_init done!\n");
+}
+
+/*
+* @mm       : current thread's mm_struct
+* @addr     : the va to look up
+*
+* @return   : the VMA if found or NULL if not found
+*/
+struct vm_area_struct *find_vma(struct mm_struct *mm, uint64_t addr){
+    struct vm_area_struct *vma = mm->mmap;
+    while(vma){
+        if(vma->vm_start <= addr && addr < vma->vm_end){
+            return vma;
+        }
+        vma = vma->vm_next;
+    }
+    return NULL;
+}
+
+/*
+* @mm       : current thread's mm_struct
+* @addr     : the va to map
+* @len      : memory size to map
+* @vm_pgoff : phdr->p_offset
+* @vm_filesz: phdr->p_filesz
+* @flags    : flags for the new VMA
+*
+* @return   : start va
+*/
+uint64_t do_mmap(struct mm_struct *mm, uint64_t addr, uint64_t len, uint64_t vm_pgoff, uint64_t vm_filesz, uint64_t flags){
+    struct vm_area_struct *new_vma = (struct vm_area_struct*)kalloc();
+    
+    new_vma->vm_mm = mm;
+    struct vm_area_struct *prev =  mm->mmap;
+    if(!prev){
+        mm->mmap = new_vma;
+        new_vma->vm_next = NULL;
+        new_vma->vm_prev = NULL;
+    }else{
+        mm->mmap = new_vma;
+        new_vma->vm_next = prev;
+        new_vma->vm_prev = NULL;
+        prev->vm_prev = new_vma;
+    }
+
+    new_vma->vm_start = addr;
+    new_vma->vm_end = addr + len;
+    new_vma->vm_flags = flags;
+    new_vma->vm_pgoff = vm_pgoff;
+    new_vma->vm_filesz = vm_filesz;
+
+    return addr;
+}
+
+// #define VM_ANON 0x1
+// #define VM_READ 0x2
+// #define VM_WRITE 0x4
+// #define VM_EXEC 0x8
+
+// #define PF_X		(1 << 0)
+// #define PF_W		(1 << 1)
+// #define PF_R		(1 << 2)
+void load_program(struct task_struct *task) {
+    Elf64_Ehdr *ehdr = (Elf64_Ehdr *)_sramdisk;
+
+    // LogGREEN("ehdr->e_ident = 0x%llx", *((uint64_t*)ehdr->e_ident));
+    Elf64_Phdr *phdrs = (Elf64_Phdr *)(_sramdisk + ehdr->e_phoff);
+    for (int i = 0; i < ehdr->e_phnum; ++i) {
+        Elf64_Phdr *phdr = phdrs + i;
+        if (phdr->p_type == PT_LOAD) {
+            uint64_t perm = (phdr->p_flags & PF_X) << 3 | (phdr->p_flags & PF_R) >> 1 | (phdr->p_flags & PF_W) << 1;
+            do_mmap(&(task->mm), phdr->p_paddr, phdr->p_memsz, phdr->p_offset, phdr->p_filesz, perm);
+        }
+    }
+    do_mmap(&(task->mm), USER_END - PGSIZE, PGSIZE, 0, PGSIZE, VM_READ | VM_ANON | VM_WRITE);
+    task->thread.sepc = ehdr->e_entry;
 }

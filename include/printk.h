@@ -40,6 +40,11 @@
     printk("\33[1;36m[%s,%d,%s] " format "\33[0m\n", \
         __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 
+#define Err(format, ...) {                              \
+    printk("\33[1;31m[%s,%d,%s] " format "\33[0m\n",    \
+        __FILE__, __LINE__, __func__, ## __VA_ARGS__);  \
+    while(1);                                           \
+}
 
 int printk(const char *, ...);
 
