@@ -67,6 +67,8 @@ void setup_vm_final() {
 }
 
 
+/* 创建多级页表映射关系 */
+/* 不要修改该接口的参数和返回值 */
 void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, uint64_t perm) {
     /*
      * pgtbl 为根页表的基地址
@@ -78,7 +80,6 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, uint
      * 可以使用 V bit 来判断页表项是否存在
     **/
     // printk("Come into the create_mapping\n");
-    LogBLUE("root: 0x%llx, [0x%llx, 0x%llx) -> [0x%llx, 0x%llx), perm: 0x%llx", pgtbl, pa, pa + sz, va, va + sz, perm);
     uint64_t vlimit = va + sz;
     uint64_t *pgd, *pmd, *pte;
     pgd = pgtbl;
@@ -109,4 +110,5 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, uint
         va += PGSIZE;
         pa += PGSIZE;
     }
+    LogBLUE("root: 0x%llx, [0x%llx, 0x%llx) -> [0x%llx, 0x%llx), perm: 0x%llx", pgtbl, pa, pa + sz, va, va + sz, perm);
 }

@@ -38,7 +38,7 @@ _start:
     addi a6, zero, 0
     ecall
     # set sstatus[SIE] = 1
-    csrwi sstatus, 0x2
+    # csrwi sstatus, 0x2
 
     jal start_kernel
     # jal _srodata
