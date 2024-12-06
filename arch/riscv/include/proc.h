@@ -93,4 +93,17 @@ int check_load(uint64_t *pgtbl, uint64_t addr);
 
 uint64_t do_fork(struct pt_regs *regs);
 
+uint64_t check_cow(uint64_t *pgtbl, uint64_t addr, struct mm_struct *mm);
+
+uint64_t do_fork_cow(struct pt_regs *regs);
+
+uint64_t pte_entry_ret(uint64_t *pgtbl, uint64_t addr);
+
+// //返回true表示是COW，返回false表示不是COW
+// uint64_t check_cow(uint64_t *pgtbl, uint64_t addr, struct mm_struct *mm);
+
+void page_cow(uint64_t *pgtbl, uint64_t addr, uint64_t perm);
+
+void change_perm(uint64_t *pgtbl, uint64_t addr);
+
 #endif
