@@ -51,8 +51,8 @@ _traps:
     # call csr_change
 
     # 3. restore sepc and 32 registers (x2(sp) should be restore last) from stack
-    ld t0, 248(sp)
-    csrw sepc, t0
+    # ld t0, 248(sp)
+    # csrw sepc, t0
     ld x1, 0(sp)
     
     ld x3, 16(sp)
