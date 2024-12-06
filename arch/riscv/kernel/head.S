@@ -1,8 +1,13 @@
     .extern start_kernel
+    .extern task_init
+    .extern mm_init
     .section .text.init
     .globl _start
 _start:
     la sp, boot_stack_top
+
+    call mm_init
+    call task_init
 
     # set stvec = _traps
     la t0, _traps

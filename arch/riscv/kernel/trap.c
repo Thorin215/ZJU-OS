@@ -2,11 +2,13 @@
 #include "printk.h"
 #include "clock.h"
 #include "defs.h"
+#include "proc.h"
 void trap_handler(uint64_t scause, uint64_t sepc) {
     // 通过 `scause` 判断 trap 类型
     if(scause == 0x8000000000000005){
         printk("timer interrupt\n");
         clock_set_next_event();
+        do_timer();
     }
     // 如果是 interrupt 判断是否是 timer interrupt
     
@@ -15,9 +17,9 @@ void trap_handler(uint64_t scause, uint64_t sepc) {
     // `clock_set_next_event()` 见 4.3.4 节
     
     // 其他 interrupt / exception 可以直接忽略，推荐打印出来供以后调试
-    printk((scause & 0x8000000000000000) > 0 ? "Interrupt: " : "Exception: ");
-    printk("scause: 0x%lx\n", scause);
-    printk("sepc: 0x%lx\n", sepc);
+    // printk((scause & 0x8000000000000000) > 0 ? "Interrupt: " : "Exception: ");
+    // printk("scause: 0x%lx\n", scause);
+    // printk("sepc: 0x%lx\n", sepc);
 
 }
 
