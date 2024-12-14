@@ -134,11 +134,11 @@ void do_page_fault(struct pt_regs *regs) {
             // LogBLUE("pa = 0x%llx, va = 0x%llx", VA2PA((uint64_t)uapp), _stval);
             if (PGROUNDDOWN(vma->vm_filesz) < PGSIZE){ // 整个uapp小于一页
                 char *cuapp = (char*)uapp + (vma->vm_start & 0xfff);
-                char *celf = (char*)_sramdisk + (vma->vm_start & 0xfff);
+                char *celf = (char*)_sramdisk + vma->vm_pgoff;
                 for(uint64_t i = 0; i < vma->vm_filesz; i++) cuapp[i] = celf[i];
             }else if(PGROUNDDOWN(va) == PGROUNDDOWN(vma->vm_start)){ // 从头开始
                 char *cuapp = (char*)uapp + (vma->vm_start & 0xfff);
-                char *celf = (char*)_sramdisk + (vma->vm_start & 0xfff);
+                char *celf = (char*)_sramdisk + vma->vm_pgoff;
                 int i;
                 // LogBLUE("0x%llx", PGSIZE - vma->vm_start & 0x1ff);
                 for(i = 0; i < (PGSIZE - vma->vm_start & 0xfff); i++) {
@@ -148,12 +148,12 @@ void do_page_fault(struct pt_regs *regs) {
                 // LogBLUE("[0x%llx] cuapp = 0x%llx, celf = 0x%llx", i, cuapp[i], celf[i]);
             }else if(PGROUNDDOWN(va) == PGROUNDDOWN(vma->vm_start + vma->vm_filesz - 1)){ // 最后一页
                 char *cuapp = (char*)uapp;
-                char *celf = (char*)((uint64_t)_sramdisk + PGROUNDDOWN(va) - PGROUNDDOWN(vma->vm_start));
+                char *celf = (char*)((uint64_t)_sramdisk + PGROUNDDOWN(vma->vm_pgoff + va - vma->vm_start));
                 for(uint64_t i = 0; i <= ((vma->vm_start + vma->vm_filesz) & 0xfff); i++) cuapp[i] = celf[i];
                 // ! 这里要考虑漏掉一个字节的情况
             }else{ // 中间
                 char *cuapp = (char*)uapp;
-                char *celf = (char*)((uint64_t)_sramdisk + PGROUNDDOWN(va) - PGROUNDDOWN(vma->vm_start));
+                char *celf = (char*)((uint64_t)_sramdisk + PGROUNDDOWN(vma->vm_pgoff + va - vma->vm_start));
                 for(uint64_t i = 0; i < PGSIZE; i++) cuapp[i] = celf[i];
             }
 
