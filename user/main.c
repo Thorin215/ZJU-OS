@@ -54,6 +54,22 @@ int main() {
     }
 }
 
+/* PFH main #2 */
+#elif defined(PFH3)
+char global_placeholder[0x1000];
+const char *message = "Hello, OS Lab!";
+unsigned long global_increment = 0;
+
+int main() {
+    int count = 5;
+    while (count --) {
+        printf("[U-MODE] pid: %ld, increment: %ld\n", getpid(), global_increment++);
+        wait(WAIT_TIME);
+    }
+    printf("%s", message);
+    *(char *)(message) = 'h';
+}
+
 /*************** Test Fork ***************/
 /* Fork main #1 */
 #elif defined(FORK1)
@@ -139,26 +155,38 @@ int main() {
         wait(WAIT_TIME);
     }
 }
+
+
 #elif defined(COW)
 int global_variable = 0;
-// char placeholder[8192];
-// const char *message = "Hello, OS Lab5!";
-const char message[4096] = "Hello, OS Lab5!";
+char placeholder[8192];
+
 int main() {
+    placeholder[4096] = 'Z';
+    placeholder[4097] = 'J';
+    placeholder[4098] = 'U';
+    placeholder[4099] = ' ';
+    placeholder[4100] = 'O';
+    placeholder[4101] = 'S';
+    placeholder[4102] = ' ';
+    placeholder[4103] = 'L';
+    placeholder[4104] = 'a';
+    placeholder[4105] = 'b';
+    placeholder[4106] = '5';
+    placeholder[4107] = '\0';
 
-    printf("[U] pid: %ld is running! global_variable: %d, Message: %s\n", getpid(), global_variable++, message);
+    printf("[U] pid: %ld is running! global_variable: %d, Message: %s\n", getpid(), global_variable++, &placeholder[4096]);
     fork();
     fork();
 
-    printf("[U] pid: %ld is running! global_variable: %d, Message: %s\n", getpid(), global_variable++, message);
+    printf("[U] pid: %ld is running! global_variable: %d, Message: %s\n", getpid(), global_variable++, &placeholder[4096]);
     fork();
 
     while(1) {
-        printf("[U] pid: %ld is running! global_variable: %d, Message: %s\n", getpid(), global_variable++, message);
+        printf("[U] pid: %ld is running! global_variable: %d, Message: %s\n", getpid(), global_variable++, &placeholder[4096]);
         wait(WAIT_TIME);
     }
 }
-
 #else
 
 int main() {

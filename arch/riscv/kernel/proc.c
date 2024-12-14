@@ -372,6 +372,7 @@ void load_program(struct task_struct *task) {
         Elf64_Phdr *phdr = phdrs + i;
         if (phdr->p_type == PT_LOAD) {
             uint64_t perm = (phdr->p_flags & PF_X) << 3 | (phdr->p_flags & PF_R) >> 1 | (phdr->p_flags & PF_W) << 1;
+            LogYELLOW("phdr->p_vaddr = 0x%llx, phdr->p_memsz = 0x%llx, phdr->p_offset = 0x%llx, phdr->p_filesz = 0x%llx, perm = 0x%llx", phdr->p_vaddr, phdr->p_memsz, phdr->p_offset, phdr->p_filesz, perm);
             do_mmap(&(task->mm), phdr->p_paddr, phdr->p_memsz, phdr->p_offset, phdr->p_filesz, perm);
         }
     }
